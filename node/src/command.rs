@@ -5,10 +5,13 @@ use crate::{
 	service,
 };
 use frame_benchmarking_cli::{BenchmarkCmd, ExtrinsicFactory, SUBSTRATE_REFERENCE_HARDWARE};
-use node_template_runtime::{Block, EXISTENTIAL_DEPOSIT};
+use node_bridge_runtime::{Block, EXISTENTIAL_DEPOSIT};
 use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
 use sc_service::PartialComponents;
-use sp_keyring::Sr25519Keyring;
+use sp_keyring::Ed25519Keyring;
+use sp_core::{ecdsa, Pair};
+use sp_runtime::traits::IdentifyAccount;
+use primitives::signature::BridgeSigner;
 
 impl SubstrateCli for Cli {
 	fn impl_name() -> String {
@@ -45,7 +48,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn native_runtime_version(_: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-		&node_template_runtime::VERSION
+		&node_bridge_runtime::VERSION
 	}
 }
 
@@ -156,11 +159,15 @@ pub fn run() -> sc_cli::Result<()> {
 					BenchmarkCmd::Extrinsic(cmd) => {
 						let PartialComponents { client, .. } = service::new_partial(&config)?;
 						// Register the *Remark* and *TKA* builders.
+						//Ed25519Keyring::Alice.to_account_id()
+						let pair = ecdsa::Pair::from_seed(&Ed25519Keyring::Alice.pair().seed());
+						let signer = BridgeSigner::from(pair.public());
+						let acc = signer.into_account();
 						let ext_factory = ExtrinsicFactory(vec![
 							Box::new(RemarkBuilder::new(client.clone())),
 							Box::new(TransferKeepAliveBuilder::new(
 								client.clone(),
-								Sr25519Keyring::Alice.to_account_id(),
+								acc,
 								EXISTENTIAL_DEPOSIT,
 							)),
 						]);

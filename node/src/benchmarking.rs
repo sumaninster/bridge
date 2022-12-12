@@ -22,16 +22,17 @@
 
 use crate::service::FullClient;
 
-use node_template_runtime as runtime;
+use node_bridge_runtime as runtime;
 use runtime::{AccountId, Balance, BalancesCall, SystemCall};
 use sc_cli::Result;
 use sc_client_api::BlockBackend;
-use sp_core::{Encode, Pair};
+use sp_core::{ecdsa, Encode, Pair};
 use sp_inherents::{InherentData, InherentDataProvider};
-use sp_keyring::Sr25519Keyring;
-use sp_runtime::{OpaqueExtrinsic, SaturatedConversion};
+use sp_keyring::Ed25519Keyring;
+use sp_runtime::{OpaqueExtrinsic, SaturatedConversion, traits::IdentifyAccount};
 
 use std::{sync::Arc, time::Duration};
+use primitives::signature::BridgeSigner;
 
 /// Generates extrinsics for the `benchmark overhead` command.
 ///
@@ -57,7 +58,8 @@ impl frame_benchmarking_cli::ExtrinsicBuilder for RemarkBuilder {
 	}
 
 	fn build(&self, nonce: u32) -> std::result::Result<OpaqueExtrinsic, &'static str> {
-		let acc = Sr25519Keyring::Bob.pair();
+		//let acc = Ed25519Keyring::Bob.pair();
+		let acc = ecdsa::Pair::from_seed(&Ed25519Keyring::Bob.pair().seed());
 		let extrinsic: OpaqueExtrinsic = create_benchmark_extrinsic(
 			self.client.as_ref(),
 			acc,
@@ -96,7 +98,8 @@ impl frame_benchmarking_cli::ExtrinsicBuilder for TransferKeepAliveBuilder {
 	}
 
 	fn build(&self, nonce: u32) -> std::result::Result<OpaqueExtrinsic, &'static str> {
-		let acc = Sr25519Keyring::Bob.pair();
+		//let acc = Ed25519Keyring::Bob.pair();
+		let acc = ecdsa::Pair::from_seed(&Ed25519Keyring::Bob.pair().seed());
 		let extrinsic: OpaqueExtrinsic = create_benchmark_extrinsic(
 			self.client.as_ref(),
 			acc,
@@ -118,7 +121,7 @@ impl frame_benchmarking_cli::ExtrinsicBuilder for TransferKeepAliveBuilder {
 /// Note: Should only be used for benchmarking.
 pub fn create_benchmark_extrinsic(
 	client: &FullClient,
-	sender: sp_core::sr25519::Pair,
+	sender: sp_core::ecdsa::Pair,
 	call: runtime::RuntimeCall,
 	nonce: u32,
 ) -> runtime::UncheckedExtrinsic {
@@ -160,10 +163,12 @@ pub fn create_benchmark_extrinsic(
 	);
 	let signature = raw_payload.using_encoded(|e| sender.sign(e));
 
+	let signer = BridgeSigner::from(sender.public());
+	let acc = signer.into_account();
 	runtime::UncheckedExtrinsic::new_signed(
 		call.clone(),
-		sp_runtime::AccountId32::from(sender.public()).into(),
-		runtime::Signature::Sr25519(signature.clone()),
+		sp_runtime::MultiAddress::Id(acc),
+		runtime::Signature::from(signature.clone()),
 		extra.clone(),
 	)
 }
