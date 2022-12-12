@@ -1,0 +1,61 @@
+[package]
+name = "pallet-bridge"
+version = "4.0.0-dev"
+description = "Bridge for token transfer"
+authors = ["sumaninster <https://github.com/sumaninster>"]
+homepage = "https://github.com/sumaninster"
+edition = "2021"
+license = "Unlicense"
+publish = false
+repository = "https://github.com/sumaninster/bridge"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+codec = { package = 'parity-scale-codec', version = '3.0.0', default-features = false }
+frame-benchmarking = { default-features = false, optional = true, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.32" }
+frame-support = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.32" }
+frame-system = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.32" }
+
+hex-literal = { version = "0.3.4", default-features = false }
+pallet-assets = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.32', default-features = false }
+pallet-balances = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.32', default-features = false }
+pallet-timestamp = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.32', default-features = false }
+scale-info = { version = '2.2.0', default-features = false, features = [
+	'derive',
+] }
+serde = { version = '1.0.144', features = ['derive'], optional = true }
+sp-runtime = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.32', default-features = false }
+sp-std = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.32', default-features = false }
+sp-core = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.32', default-features = false }
+
+primitives = { path = "../../primitives", default-features = false }
+
+[dev-dependencies]
+sp-io = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.32' }
+sp-keystore = { git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.32" }
+
+[features]
+default = ['std']
+runtime-benchmarks = ['frame-benchmarking']
+std = [
+	'serde',
+	'codec/std',
+	'sp-runtime/std',
+	'sp-core/std',
+	"frame-benchmarking?/std",
+	"frame-support/std",
+	"frame-system/std",
+	'sp-std/std',
+	"primitives/std",
+	'scale-info/std',
+	'pallet-assets/std',
+	'pallet-balances/std',
+	'pallet-assets/std',
+	'pallet-timestamp/std',
+]
+try-runtime = ['frame-support/try-runtime']
+
+[lib]
+doctest = false

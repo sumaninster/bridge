@@ -1,13 +1,14 @@
-use node_template_runtime::{
+use node_bridge_runtime::{
 	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig,
-	SystemConfig, WASM_BINARY,
+	SystemConfig, WASM_BINARY, AssetsConfig, BridgeConfig,
 };
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_core::{sr25519, Pair, Public};
+use sp_core::{Pair, Public, ecdsa};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
-
+use node_bridge_runtime::constants::currency::{JUR_ASSET_ID, JUR_DECIMALS, JUR_MINIMUM_BALANCE, JUR_NAME, JUR_SYMBOL};
+use hex_literal::hex;
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 
@@ -51,13 +52,14 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				// Initial PoA authorities
 				vec![authority_keys_from_seed("Alice")],
 				// Sudo account
-				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				get_account_id_from_seed::<ecdsa::Public>("Alice"),
+				vec![AccountId::from(hex!("3Cd0A705a2DC65e5b1E1205896BaA2be8A07c6e0"))],
 				// Pre-funded accounts
 				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
+					get_account_id_from_seed::<ecdsa::Public>("Alice"),
+					get_account_id_from_seed::<ecdsa::Public>("Bob"),
+					get_account_id_from_seed::<ecdsa::Public>("Alice//stash"),
+					get_account_id_from_seed::<ecdsa::Public>("Bob//stash"),
 				],
 				true,
 			)
@@ -91,21 +93,22 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 				// Initial PoA authorities
 				vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
 				// Sudo account
-				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				get_account_id_from_seed::<ecdsa::Public>("Alice"),
+				vec![AccountId::from(hex!("3Cd0A705a2DC65e5b1E1205896BaA2be8A07c6e0"))],
 				// Pre-funded accounts
 				vec![
-					get_account_id_from_seed::<sr25519::Public>("Alice"),
-					get_account_id_from_seed::<sr25519::Public>("Bob"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie"),
-					get_account_id_from_seed::<sr25519::Public>("Dave"),
-					get_account_id_from_seed::<sr25519::Public>("Eve"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+					get_account_id_from_seed::<ecdsa::Public>("Alice"),
+					get_account_id_from_seed::<ecdsa::Public>("Bob"),
+					get_account_id_from_seed::<ecdsa::Public>("Charlie"),
+					get_account_id_from_seed::<ecdsa::Public>("Dave"),
+					get_account_id_from_seed::<ecdsa::Public>("Eve"),
+					get_account_id_from_seed::<ecdsa::Public>("Ferdie"),
+					get_account_id_from_seed::<ecdsa::Public>("Alice//stash"),
+					get_account_id_from_seed::<ecdsa::Public>("Bob//stash"),
+					get_account_id_from_seed::<ecdsa::Public>("Charlie//stash"),
+					get_account_id_from_seed::<ecdsa::Public>("Dave//stash"),
+					get_account_id_from_seed::<ecdsa::Public>("Eve//stash"),
+					get_account_id_from_seed::<ecdsa::Public>("Ferdie//stash"),
 				],
 				true,
 			)
@@ -129,9 +132,22 @@ fn testnet_genesis(
 	wasm_binary: &[u8],
 	initial_authorities: Vec<(AuraId, GrandpaId)>,
 	root_key: AccountId,
+	relayers: Vec<AccountId>,
 	endowed_accounts: Vec<AccountId>,
 	_enable_println: bool,
 ) -> GenesisConfig {
+	let metadata = vec![
+		(
+			JUR_ASSET_ID,
+			JUR_NAME.as_bytes().to_vec(),
+			JUR_SYMBOL.as_bytes().to_vec(),
+			JUR_DECIMALS,
+		),
+	];
+	let assets = vec![
+		(JUR_ASSET_ID, root_key, true, JUR_MINIMUM_BALANCE),
+	];
+	let endowed_assets = Vec::with_capacity(endowed_accounts.len());
 	GenesisConfig {
 		system: SystemConfig {
 			// Add Wasm runtime to storage.
@@ -141,6 +157,7 @@ fn testnet_genesis(
 			// Configure endowed accounts with initial balance of 1 << 60.
 			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
 		},
+		assets: AssetsConfig { assets, accounts: endowed_assets, metadata },
 		aura: AuraConfig {
 			authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
 		},
@@ -152,5 +169,6 @@ fn testnet_genesis(
 			key: Some(root_key),
 		},
 		transaction_payment: Default::default(),
+		bridge: BridgeConfig { relayers },
 	}
 }
