@@ -1,3 +1,34 @@
-//! Benchmarks for Bridge Pallet
+//! Benchmarking setup for pallet-bridge
 
-#![cfg(feature = "runtime-benchmarks")]
+use super::*;
+
+#[allow(unused)]
+use crate::Pallet as Template;
+use frame_benchmarking::{benchmarks, whitelisted_caller};
+use frame_system::RawOrigin;
+
+const SEED: u32 = 0;
+const MAX_MEMBERS: u32 = 100;
+
+benchmarks! {
+	add_relayer {
+		let m in 1 .. MAX_MEMBERS;
+		let member: T::AccountId = account("soume_account", m, SEED);
+	}: add_relayer(RawOrigin::Root, member.clone())
+	verify {
+		assert!(Relayer::<T>::get().contains(&member));
+	}
+
+	remove_relayer {
+		let m in 1 .. MAX_MEMBERS;
+		let member: T::AccountId = account("soume_account", m, SEED);
+		let mut relayers = Relayer::<T>::get();
+		relayers.push(member.clone());
+		<Relayer<T>>::put(relayers);
+	}: remove_relayer(RawOrigin::Root, member.clone())
+	verify {
+		assert!(!Relayer::<T>::get().contains(&member));
+	}
+
+	impl_benchmark_test_suite!(Bridge, crate::mock::new_test_ext(), crate::mock::Test);
+}
