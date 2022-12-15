@@ -388,7 +388,6 @@ mod benches {
 		[pallet_balances, Balances]
 		[pallet_assets, Assets]
 		[pallet_timestamp, Timestamp]
-		[pallet_template, TemplateModule]
 		[pallet_bridge, Bridge]
 	);
 }

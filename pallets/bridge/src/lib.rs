@@ -21,6 +21,8 @@ use primitives::{
 };
 use crate::helpers::{Transaction, TxData};
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
 mod helpers;
 #[cfg(test)]
 mod mock;
