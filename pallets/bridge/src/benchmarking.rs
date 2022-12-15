@@ -3,8 +3,8 @@
 use super::*;
 
 #[allow(unused)]
-use crate::Pallet as Template;
-use frame_benchmarking::{benchmarks, whitelisted_caller};
+use crate::Pallet as Bridge;
+use frame_benchmarking::{account, benchmarks};
 use frame_system::RawOrigin;
 
 const SEED: u32 = 0;
