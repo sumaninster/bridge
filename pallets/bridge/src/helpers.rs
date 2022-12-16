@@ -3,12 +3,9 @@ use frame_support::pallet_prelude::*;
 use scale_info::TypeInfo;
 use sp_core::H160;
 
-use primitives::{
-	bridge::TxHash,
-	types::Balance,
-};
+use primitives::{bridge::TxHash, types::Balance};
 
-#[derive(PartialEq, Eq, Clone, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[derive(PartialEq, Eq, Clone, Encode, Decode, RuntimeDebug, TypeInfo, MaxEncodedLen, Default)]
 #[scale_info(skip_type_params(T))]
 pub struct Transaction {
 	pub transaction_hash: TxHash,
@@ -20,16 +17,6 @@ pub struct Transaction {
 #[scale_info(skip_type_params(T))]
 pub enum TxData {
 	Payment { amount: Balance, address: H160 },
-}
-
-impl Default for Transaction {
-	fn default() -> Self {
-		Transaction {
-			transaction_hash: TxHash::default(),
-			transaction: TxData::default(),
-			timestamp: 0,
-		}
-	}
 }
 
 impl Default for TxData {

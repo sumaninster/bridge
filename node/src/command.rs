@@ -6,12 +6,12 @@ use crate::{
 };
 use frame_benchmarking_cli::{BenchmarkCmd, ExtrinsicFactory, SUBSTRATE_REFERENCE_HARDWARE};
 use node_bridge_runtime::{Block, EXISTENTIAL_DEPOSIT};
+use primitives::signature::BridgeSigner;
 use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
 use sc_service::PartialComponents;
-use sp_keyring::Ed25519Keyring;
 use sp_core::{ecdsa, Pair};
+use sp_keyring::Ed25519Keyring;
 use sp_runtime::traits::IdentifyAccount;
-use primitives::signature::BridgeSigner;
 
 impl SubstrateCli for Cli {
 	fn impl_name() -> String {

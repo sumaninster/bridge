@@ -6,12 +6,12 @@ use frame_support::{
 };
 use frame_system as system;
 use frame_system::{limits, EnsureRoot};
+use primitives::types::{AccountId, Balance, BlockNumber, TokenId};
 use sp_core::{H160, H256};
 use sp_runtime::{
 	testing::Header,
 	traits::{BlakeTwo256, IdentityLookup},
 };
-use primitives::types::{AccountId, Balance, BlockNumber, TokenId};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -67,7 +67,7 @@ parameter_types! {
 	pub const AssetAccountDeposit: Balance = 16;
 	pub const ApprovalDeposit: Balance = 1;
 	pub const AssetsStringLimit: u32 = 50;
-	pub const MetadataDepositBase: Balance = 1 * 68;
+	pub const MetadataDepositBase: Balance = 68;
 	pub const MetadataDepositPerByte: Balance = 1;
 }
 pub type AssetsForceOrigin = EnsureRoot<AccountId>;
@@ -139,13 +139,18 @@ impl pallet_bridge::Config for Test {
 }
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let t = frame_system::GenesisConfig::default()
-		.build_storage::<Test>()
-		.unwrap();
+	let t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| {
-		Assets::force_create(RuntimeOrigin::root(), 2, create_account(b"6490B68F1116BFE87DDD"), true, 1).unwrap();
+		Assets::force_create(
+			RuntimeOrigin::root(),
+			2,
+			create_account(b"6490B68F1116BFE87DDD"),
+			true,
+			1,
+		)
+		.unwrap();
 		Assets::force_set_metadata(
 			RuntimeOrigin::root(),
 			2,
@@ -153,11 +158,11 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 			b"JUR".to_vec(),
 			6,
 			false,
-		).unwrap();
+		)
+		.unwrap();
 	});
 	ext
 }
-
 
 /// Helper function to create an AccountId from  a slice
 pub fn create_account(address: &[u8]) -> AccountId {

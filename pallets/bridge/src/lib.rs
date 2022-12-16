@@ -5,6 +5,7 @@
 /// <https://docs.substrate.io/reference/frame-pallets/>
 pub use pallet::*;
 
+use crate::helpers::{Transaction, TxData};
 use frame_support::{
 	pallet_prelude::*,
 	traits::{
@@ -14,12 +15,11 @@ use frame_support::{
 	weights::constants::RocksDbWeight as DbWeight,
 };
 use frame_system::pallet_prelude::*;
-use sp_std::{prelude::*, vec};
 use primitives::{
 	bridge::{LedgerIndex, TxHash},
-	types::{AccountId, TokenId, Balance, Timestamp},
+	types::{AccountId, Balance, Timestamp, TokenId},
 };
-use crate::helpers::{Transaction, TxData};
+use sp_std::{prelude::*, vec};
 
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
@@ -27,9 +27,9 @@ mod helpers;
 #[cfg(test)]
 mod mock;
 #[cfg(test)]
-mod tests_relayer;
-#[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_relayer;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -47,8 +47,8 @@ pub mod pallet {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type Assets: Transfer<Self::AccountId, AssetId = TokenId, Balance = Balance>
-		+ Inspect<Self::AccountId, AssetId = TokenId, Balance = Balance>
-		+ Mutate<Self::AccountId, AssetId = TokenId, Balance = Balance>;
+			+ Inspect<Self::AccountId, AssetId = TokenId, Balance = Balance>
+			+ Mutate<Self::AccountId, AssetId = TokenId, Balance = Balance>;
 
 		/// Allowed origins to add/remove the relayers
 		type ApproveOrigin: EnsureOrigin<Self::RuntimeOrigin>;
@@ -78,26 +78,25 @@ pub mod pallet {
 	#[pallet::getter(fn process_transaction)]
 	/// Temporary storage to set the transactions ready to be processed at specified block number
 	pub type ProcessTransaction<T: Config> =
-	StorageMap<_, Blake2_128Concat, T::BlockNumber, Vec<TxHash>, OptionQuery>;
+		StorageMap<_, Blake2_128Concat, T::BlockNumber, Vec<TxHash>, OptionQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn process_transaction_details)]
 	/// Stores submitted transactions waiting to be processed
 	/// Transactions will be cleared after `ClearTxPeriod` blocks once processed
 	pub type ProcessTransactionDetails<T: Config> =
-	StorageMap<_, Identity, TxHash, (LedgerIndex, Transaction, T::AccountId)>;
+		StorageMap<_, Identity, TxHash, (LedgerIndex, Transaction, T::AccountId)>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn settled_transaction_details)]
 	/// Settled transactions stored as history for a specific period
 	pub type SettledTransactionDetails<T: Config> =
-	StorageMap<_, Twox64Concat, T::BlockNumber, Vec<TxHash>>;
+		StorageMap<_, Twox64Concat, T::BlockNumber, Vec<TxHash>>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn challenge_transaction_list)]
 	/// Challenge received for a transaction mapped by hash, will be cleared when sudo validates it
-	pub type ChallengeTransactionList<T: Config> =
-	StorageMap<_, Identity, TxHash, T::AccountId>;
+	pub type ChallengeTransactionList<T: Config> = StorageMap<_, Identity, TxHash, T::AccountId>;
 
 	// Pallets use events to inform users when important changes are made.
 	// https://docs.substrate.io/main-docs/build/events-errors/
@@ -160,7 +159,7 @@ pub mod pallet {
 			timestamp: Timestamp,
 		) -> DispatchResult {
 			let relayer = ensure_signed(origin)?;
-			let active_relayer = <Relayer<T>>::get(&relayer).unwrap_or(false);
+			let active_relayer = <Relayer<T>>::get(relayer).unwrap_or(false);
 			ensure!(active_relayer, Error::<T>::NotPermitted);
 			ensure!(
 				Self::process_transaction_details(transaction_hash).is_none(),
@@ -171,35 +170,26 @@ pub mod pallet {
 
 		/// Submit transaction challenge
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
-		pub fn submit_challenge(
-			origin: OriginFor<T>,
-			transaction_hash: TxHash,
-		) -> DispatchResult {
+		pub fn submit_challenge(origin: OriginFor<T>, transaction_hash: TxHash) -> DispatchResult {
 			let challenger = ensure_signed(origin)?;
-			ChallengeTransactionList::<T>::insert(&transaction_hash, challenger);
+			ChallengeTransactionList::<T>::insert(transaction_hash, challenger);
 			Ok(())
 		}
 
 		/// Sudo verifies that the challenge failed
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1).ref_time())]
-		pub fn failed_challenge(
-			origin: OriginFor<T>,
-			transaction_hash: TxHash,
-		) -> DispatchResult {
+		pub fn failed_challenge(origin: OriginFor<T>, transaction_hash: TxHash) -> DispatchResult {
 			T::ApproveOrigin::ensure_origin(origin)?;
-			ChallengeTransactionList::<T>::remove(&transaction_hash);
+			ChallengeTransactionList::<T>::remove(transaction_hash);
 			Self::add_to_process(transaction_hash)?;
 			Ok(())
 		}
 
 		/// Sudo verifies that the challenge is true
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
-		pub fn success_challenge(
-			origin: OriginFor<T>,
-			transaction_hash: TxHash,
-		) -> DispatchResult {
+		pub fn success_challenge(origin: OriginFor<T>, transaction_hash: TxHash) -> DispatchResult {
 			T::ApproveOrigin::ensure_origin(origin)?;
-			ProcessTransactionDetails::<T>::remove(&transaction_hash);
+			ProcessTransactionDetails::<T>::remove(transaction_hash);
 			Ok(())
 		}
 
@@ -261,8 +251,8 @@ impl<T: Config> Pallet<T> {
 						let clear_block_number = <frame_system::Pallet<T>>::block_number() +
 							T::ClearTxPeriod::get().into();
 						<SettledTransactionDetails<T>>::append(
-							&clear_block_number,
-							transaction_hash.clone(),
+							clear_block_number,
+							transaction_hash,
 						);
 						writes += 1;
 						Self::deposit_event(Event::Processed(ledger_index, transaction_hash));
@@ -298,7 +288,7 @@ impl<T: Config> Pallet<T> {
 		timestamp: Timestamp,
 	) -> DispatchResult {
 		let val = Transaction { transaction_hash, transaction, timestamp };
-		<ProcessTransactionDetails<T>>::insert(&transaction_hash, (ledger_index, val, relayer));
+		<ProcessTransactionDetails<T>>::insert(transaction_hash, (ledger_index, val, relayer));
 
 		Self::add_to_process(transaction_hash)?;
 		Self::deposit_event(Event::TransactionAdded(ledger_index, transaction_hash));
@@ -308,7 +298,7 @@ impl<T: Config> Pallet<T> {
 	pub fn add_to_process(transaction_hash: TxHash) -> DispatchResult {
 		let process_block_number =
 			<frame_system::Pallet<T>>::block_number() + T::ChallengePeriod::get().into();
-		ProcessTransaction::<T>::append(&process_block_number, transaction_hash);
+		ProcessTransaction::<T>::append(process_block_number, transaction_hash);
 		Ok(())
 	}
 }
