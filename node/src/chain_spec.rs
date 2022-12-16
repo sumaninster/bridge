@@ -1,14 +1,14 @@
+use hex_literal::hex;
 use node_bridge_runtime::{
-	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, Signature, SudoConfig,
-	SystemConfig, WASM_BINARY, AssetsConfig, BridgeConfig,
+	constants::currency::{JUR_ASSET_ID, JUR_DECIMALS, JUR_MINIMUM_BALANCE, JUR_NAME, JUR_SYMBOL},
+	AccountId, AssetsConfig, AuraConfig, BalancesConfig, BridgeConfig, GenesisConfig,
+	GrandpaConfig, Signature, SudoConfig, SystemConfig, WASM_BINARY,
 };
 use sc_service::ChainType;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_core::{Pair, Public, ecdsa};
+use sp_core::{ecdsa, Pair, Public};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use node_bridge_runtime::constants::currency::{JUR_ASSET_ID, JUR_DECIMALS, JUR_MINIMUM_BALANCE, JUR_NAME, JUR_SYMBOL};
-use hex_literal::hex;
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 
@@ -136,17 +136,13 @@ fn testnet_genesis(
 	endowed_accounts: Vec<AccountId>,
 	_enable_println: bool,
 ) -> GenesisConfig {
-	let metadata = vec![
-		(
-			JUR_ASSET_ID,
-			JUR_NAME.as_bytes().to_vec(),
-			JUR_SYMBOL.as_bytes().to_vec(),
-			JUR_DECIMALS,
-		),
-	];
-	let assets = vec![
-		(JUR_ASSET_ID, root_key, true, JUR_MINIMUM_BALANCE),
-	];
+	let metadata = vec![(
+		JUR_ASSET_ID,
+		JUR_NAME.as_bytes().to_vec(),
+		JUR_SYMBOL.as_bytes().to_vec(),
+		JUR_DECIMALS,
+	)];
+	let assets = vec![(JUR_ASSET_ID, root_key, true, JUR_MINIMUM_BALANCE)];
 	let endowed_assets = Vec::with_capacity(endowed_accounts.len());
 	GenesisConfig {
 		system: SystemConfig {

@@ -29,10 +29,10 @@ use sc_client_api::BlockBackend;
 use sp_core::{ecdsa, Encode, Pair};
 use sp_inherents::{InherentData, InherentDataProvider};
 use sp_keyring::Ed25519Keyring;
-use sp_runtime::{OpaqueExtrinsic, SaturatedConversion, traits::IdentifyAccount};
+use sp_runtime::{traits::IdentifyAccount, OpaqueExtrinsic, SaturatedConversion};
 
-use std::{sync::Arc, time::Duration};
 use primitives::signature::BridgeSigner;
+use std::{sync::Arc, time::Duration};
 
 /// Generates extrinsics for the `benchmark overhead` command.
 ///
