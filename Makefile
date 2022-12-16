@@ -10,4 +10,4 @@ clippy:
 	cargo +nightly clippy --all-features --tests --
 
 benchmarks:
-    cargo check --features=runtime-benchmarks --release
+	cargo check --features=runtime-benchmarks --release
