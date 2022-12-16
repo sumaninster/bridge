@@ -7,13 +7,13 @@ pub mod signature;
 /// <https://docs.substrate.io/reference/frame-pallets/>
 
 pub mod types {
-	use sp_runtime::traits::{IdentifyAccount, Verify};
 	use crate::signature::BridgeSignature;
+	use sp_runtime::traits::{IdentifyAccount, Verify};
 	/// An index to a block.
 	pub type BlockNumber = u32;
 	/// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 	pub type Signature = BridgeSignature;
-	
+
 	pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 
 	/// Balance of an account.

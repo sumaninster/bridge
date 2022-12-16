@@ -6,7 +6,7 @@ use sp_core::H160;
 
 /// Helper function to get the xrp balance of an address slice
 fn token_balance_of(address: &[u8]) -> u128 {
-	<Test as Config>::Assets::balance(TokenAssetId::get(), &H160::from_slice(address).into()) as u128
+	<Test as Config>::Assets::balance(TokenAssetId::get(), &H160::from_slice(address).into())
 }
 
 fn process_transaction(account_address: &[u8; 20]) {
@@ -80,7 +80,7 @@ fn add_transaction_works() {
 		let relayer = create_account(b"6490B68F1116BFE87DDD");
 		Bridge::initialize_relayer(&vec![relayer]);
 		for i in 0..9u64 {
-			let mut transaction_hash = transaction_hash.clone();
+			let mut transaction_hash = *transaction_hash;
 			transaction_hash[0] = i as u8;
 			submit_transaction(relayer, i * 1_000_000, &transaction_hash, tx_address, i);
 		}

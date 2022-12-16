@@ -1,4 +1,4 @@
-.PHONY: fmt-check fmt clippy
+.PHONY: fmt-check fmt clippy benchmarks
 
 fmt-check:
 	cargo +nightly fmt --all -- --check
@@ -8,3 +8,6 @@ fmt:
 
 clippy:
 	cargo +nightly clippy --all-features --tests --
+
+benchmarks:
+    cargo check --features=runtime-benchmarks --release

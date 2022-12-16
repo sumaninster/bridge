@@ -2,8 +2,8 @@
 // `construct_runtime!` does a lot of recursion and requires us to increase the limit to 256.
 #![recursion_limit = "256"]
 
-pub mod constants;// Make the WASM binary available.
-use constants::currency::{DOLLARS, JUR_ASSET_ID, deposit};
+pub mod constants; // Make the WASM binary available.
+use constants::currency::{deposit, DOLLARS, JUR_ASSET_ID};
 
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
@@ -16,9 +16,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
-	traits::{
-		AccountIdLookup, BlakeTwo256, Block as BlockT, NumberFor, One,
-	},
+	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, NumberFor, One},
 	transaction_validity::{TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult,
 };
@@ -44,10 +42,10 @@ use frame_system::EnsureRoot;
 pub use pallet_balances::Call as BalancesCall;
 pub use pallet_timestamp::Call as TimestampCall;
 use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier};
+pub use primitives::types::{AccountId, Signature};
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
-pub use primitives::types::{AccountId, Signature};
 
 /// Import the pallet.
 pub use pallet_bridge;
@@ -279,14 +277,14 @@ impl pallet_sudo::Config for Runtime {
 }
 
 parameter_types! {
-    pub const AssetDeposit: Balance = DOLLARS; // 1 UNIT deposit to create asset
-    pub const ApprovalDeposit: Balance = EXISTENTIAL_DEPOSIT;
-    pub const AssetAccountDeposit: Balance = deposit(1, 16);
-    pub const AssetsStringLimit: u32 = 50;
-    /// Key = 32 bytes, Value = 36 bytes (32+1+1+1+1)
-    // https://github.com/paritytech/substrate/blob/069917b/frame/assets/src/lib.rs#L257L271
-    pub const MetadataDepositBase: Balance = deposit(1, 68);
-    pub const MetadataDepositPerByte: Balance = deposit(0, 1);
+	pub const AssetDeposit: Balance = DOLLARS; // 1 UNIT deposit to create asset
+	pub const ApprovalDeposit: Balance = EXISTENTIAL_DEPOSIT;
+	pub const AssetAccountDeposit: Balance = deposit(1, 16);
+	pub const AssetsStringLimit: u32 = 50;
+	/// Key = 32 bytes, Value = 36 bytes (32+1+1+1+1)
+	// https://github.com/paritytech/substrate/blob/069917b/frame/assets/src/lib.rs#L257L271
+	pub const MetadataDepositBase: Balance = deposit(1, 68);
+	pub const MetadataDepositPerByte: Balance = deposit(0, 1);
 }
 
 impl pallet_assets::Config for Runtime {

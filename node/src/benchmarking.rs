@@ -103,11 +103,7 @@ impl frame_benchmarking_cli::ExtrinsicBuilder for TransferKeepAliveBuilder {
 		let extrinsic: OpaqueExtrinsic = create_benchmark_extrinsic(
 			self.client.as_ref(),
 			acc,
-			BalancesCall::transfer_keep_alive {
-				dest: self.dest.clone().into(),
-				value: self.value.into(),
-			}
-			.into(),
+			BalancesCall::transfer_keep_alive { dest: self.dest.into(), value: self.value }.into(),
 			nonce,
 		)
 		.into();
@@ -166,10 +162,10 @@ pub fn create_benchmark_extrinsic(
 	let signer = BridgeSigner::from(sender.public());
 	let acc = signer.into_account();
 	runtime::UncheckedExtrinsic::new_signed(
-		call.clone(),
+		call,
 		sp_runtime::MultiAddress::Id(acc),
-		runtime::Signature::from(signature.clone()),
-		extra.clone(),
+		runtime::Signature::from(signature),
+		extra,
 	)
 }
 
@@ -183,6 +179,6 @@ pub fn inherent_benchmark_data() -> Result<InherentData> {
 
 	timestamp
 		.provide_inherent_data(&mut inherent_data)
-		.map_err(|e| format!("creating inherent data: {:?}", e))?;
+		.map_err(|e| format!("creating inherent data: {e:?}"))?;
 	Ok(inherent_data)
 }
